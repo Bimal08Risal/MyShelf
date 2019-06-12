@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "24266850165",
+    "firebase_url": "https://myshelf-ee7b7.firebaseio.com",
+    "project_id": "myshelf-ee7b7",
+    "storage_bucket": "myshelf-ee7b7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:24266850165:android:073dba90f6d6ad5f",
+        "android_client_info": {
+          "package_name": "com.example.myshelf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "24266850165-308gatp4su0iksgd8qo9qg87op4vnqmk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbqVFcYzMEUq-PxUzZudersKp-2kf1j5g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "24266850165-308gatp4su0iksgd8qo9qg87op4vnqmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

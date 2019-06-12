@@ -58,25 +58,25 @@
         android:id="@+id/icon_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/check_icon" />
 
     <LinearLayout
+        android:id="@+id/option_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:background="@color/RecyclerViewBackground"
         android:elevation="3dp"
-        app:layout_goneMarginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginTop="8dp">
 
         <TextView
             android:id="@+id/textView29"

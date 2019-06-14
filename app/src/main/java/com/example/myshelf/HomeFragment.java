@@ -69,15 +69,10 @@ public class HomeFragment extends Fragment {
 
         sliderModelList.add(new SliderModel(R.drawable.banner_slider1,"#ffffff"));
         sliderModelList.add(new SliderModel(R.drawable.banner_slider2,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider1,"#ffffff"));
-
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider2,"#ffffff"));
         sliderModelList.add(new SliderModel(R.drawable.banner_slider3,"#ffffff"));
         sliderModelList.add(new SliderModel(R.drawable.banner_slider4,"#ffffff"));
+        sliderModelList.add(new SliderModel(R.drawable.banner_slider5,"#ffffff"));
 
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider5,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider4,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider5,"#ffffff"));
         ////////Banner Slider
 
 

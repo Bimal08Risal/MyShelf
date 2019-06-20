@@ -26,56 +26,10 @@ public class CategoryActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         categoryRecyclerView = findViewById(R.id.category_recyclerview);
-
-        ////////Banner Slider
-        List<SliderModel> sliderModelList = new ArrayList<SliderModel>();
-
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider1,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider2,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider1,"#ffffff"));
-
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider2,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider3,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider4,"#ffffff"));
-
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider5,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider4,"#ffffff"));
-        sliderModelList.add(new SliderModel(R.drawable.banner_slider5,"#ffffff"));
-        ////////Banner Slider
-
-
-        ///////// Horizontal Product Layout
-
-        List<HorizontalProductScrollModel> horizontalProductScrollModelList = new ArrayList<>();
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image,"Priya Sufi","Subin Bhattrai","Rs.281.00/-"));
-
-        ///////// Horizontal Product Layout
-
-        //////////////////////////////////
-
         LinearLayoutManager testingLayoutManager = new LinearLayoutManager(this);
         testingLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         categoryRecyclerView.setLayoutManager(testingLayoutManager);
-
         List<HomePageModel> homePageModelList = new ArrayList<>();
-        homePageModelList.add(new HomePageModel(0,sliderModelList));
-        homePageModelList.add(new HomePageModel(1,R.drawable.banner_slider8,"#000000"));
-        homePageModelList.add(new HomePageModel(2,"Recently Added",horizontalProductScrollModelList));
-        homePageModelList.add(new HomePageModel(3,"Mostly Viewed",horizontalProductScrollModelList));
-        homePageModelList.add(new HomePageModel(1,R.drawable.banner_slider8,"#000000"));
-        homePageModelList.add(new HomePageModel(3,"Mostly Viewed",horizontalProductScrollModelList));
-        homePageModelList.add(new HomePageModel(2,"Recently Added",horizontalProductScrollModelList));
-        homePageModelList.add(new HomePageModel(1,R.drawable.banner_slider8,"#000000"));
-        homePageModelList.add(new HomePageModel(1,R.drawable.banner_slider8,"#000000"));
-
         HomePageAdapter adapter = new HomePageAdapter(homePageModelList);
         categoryRecyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();

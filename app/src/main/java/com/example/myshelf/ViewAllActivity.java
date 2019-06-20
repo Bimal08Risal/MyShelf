@@ -56,26 +56,7 @@ public class ViewAllActivity extends AppCompatActivity {
 
         }else if (layout_code == 1) {
             gridView.setVisibility(View.VISIBLE);
-
             List<HorizontalProductScrollModel> horizontalProductScrollModelList = new ArrayList<>();
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
-            horizontalProductScrollModelList.add(new HorizontalProductScrollModel(R.drawable.product_image, "Priya Sufi", "Subin Bhattrai", "Rs.281.00/-"));
 
             GridProductLayoutAdapter gridProductLayoutAdapter = new GridProductLayoutAdapter(horizontalProductScrollModelList);
             gridView.setAdapter(gridProductLayoutAdapter);

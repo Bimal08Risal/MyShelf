@@ -295,7 +295,7 @@ public class HomePageAdapter extends RecyclerView.Adapter {
             gridLayoutViewAllBtn = itemView.findViewById(R.id.grid_product_layout_viewall_btn);
             gridProductLayout = itemView.findViewById(R.id.grid_layout);
         }
-        private void setGridProductLayout(List<HorizontalProductScrollModel> horizontalProductScrollModelList,String title,String color){
+        private void setGridProductLayout(final List<HorizontalProductScrollModel> horizontalProductScrollModelList, final String title, String color){
             container.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(color)));
             gridLayoutTitle.setText(title);
 
@@ -308,7 +308,7 @@ public class HomePageAdapter extends RecyclerView.Adapter {
                 Glide.with(itemView.getContext()).load(horizontalProductScrollModelList.get(x).getProductImage()).apply(new RequestOptions().placeholder(R.mipmap.home_icon)).into(productImage);
                 productTitle.setText(horizontalProductScrollModelList.get(x).getProductTitle());
                 productAuthor.setText(horizontalProductScrollModelList.get(x).getProductAuthor());
-                productPrice.setText(horizontalProductScrollModelList.get(x).getProductPrice());
+                productPrice.setText("Rs."+horizontalProductScrollModelList.get(x).getProductPrice()+"/-");
                 gridProductLayout.getChildAt(x).setBackgroundColor(Color.parseColor("#ffffff"));
                 gridProductLayout.getChildAt(x).setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -323,8 +323,10 @@ public class HomePageAdapter extends RecyclerView.Adapter {
             gridLayoutViewAllBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    ViewAllActivity.horizontalProductScrollModelList = horizontalProductScrollModelList;
                     Intent viewAllIntent = new Intent(itemView.getContext(),ViewAllActivity.class);
                     viewAllIntent.putExtra("layout_code",1);
+                    viewAllIntent.putExtra("title",title);
                     itemView.getContext().startActivity(viewAllIntent);
                 }
             });

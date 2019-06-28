@@ -30,7 +30,7 @@ public class DBqueries {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()){
                             for (QueryDocumentSnapshot documentSnapshot : task.getResult()){
-                                categoryModelList.add(new CategoryModel(documentSnapshot.get("icon").toString(), documentSnapshot.get("categoryName").toString()));
+                                categoryModelList.add(new CategoryModel((String)documentSnapshot.get("icon"), (String)documentSnapshot.get("categoryName")));
                             }
                             categoryAdaptor.notifyDataSetChanged();
                         } else {
@@ -55,11 +55,11 @@ public class DBqueries {
                                     List<SliderModel> sliderModelList = new ArrayList<>();
                                     long no_of_banners = (long)documentSnapshot.get("no_of_banners");
                                     for (long x = 1;x < no_of_banners + 1;x++){
-                                        sliderModelList.add(new SliderModel(documentSnapshot.get("banner_"+x).toString(),documentSnapshot.get("banner_"+x+"background").toString()));
+                                        sliderModelList.add(new SliderModel((String)documentSnapshot.get("banner_"+x),(String)documentSnapshot.get("banner_"+x+"background")));
                                     }
                                     lists.get(index).add(new HomePageModel(0,sliderModelList));
                                 }else if ((long) documentSnapshot.get("view_type") == 1){
-                                    lists.get(index).add(new HomePageModel(1,documentSnapshot.get("strip_ad_banner").toString(),documentSnapshot.get("background").toString()));
+                                    lists.get(index).add(new HomePageModel(1,(String)documentSnapshot.get("strip_ad_banner"),(String)documentSnapshot.get("background")));
                                 }else if ((long) documentSnapshot.get("view_type") == 2){
 
 
@@ -67,13 +67,13 @@ public class DBqueries {
                                     List<HorizontalProductScrollModel> horizontalProductScrollModelList = new ArrayList<>();
                                     long no_of_products = (long)documentSnapshot.get("no_of_products");
                                     for (long x = 1;x < no_of_products + 1;x++){
-                                        horizontalProductScrollModelList.add(new HorizontalProductScrollModel(documentSnapshot.get("product_ID_"+x).toString()
+                                        horizontalProductScrollModelList.add(new HorizontalProductScrollModel((String)documentSnapshot.get("product_ID_"+x)
                                                 ,documentSnapshot.get("product_image_"+x).toString()
                                                 ,documentSnapshot.get("product_title_"+x).toString()
                                                 ,documentSnapshot.get("product_author_"+x).toString()
                                                 ,documentSnapshot.get("product_price_"+x).toString()));
 
-                                        viewAllProductList.add(new WishlistModel(documentSnapshot.get("product_image"+x).toString()
+                                        viewAllProductList.add(new WishlistModel((String)documentSnapshot.get("product_image"+x)
                                                 ,documentSnapshot.get("product_title_"+x).toString()
                                                 ,(long)documentSnapshot.get("free_coupens_"+x)
                                                 ,documentSnapshot.get("average_rating_"+x).toString()
@@ -89,13 +89,13 @@ public class DBqueries {
                                     List<HorizontalProductScrollModel> GridLayoutModelList = new ArrayList<>();
                                     long no_of_products = (long)documentSnapshot.get("no_of_products");
                                     for (long x = 1;x < no_of_products + 1;x++){
-                                        GridLayoutModelList.add(new HorizontalProductScrollModel(documentSnapshot.get("product_ID_"+x).toString()
+                                        GridLayoutModelList.add(new HorizontalProductScrollModel((String)documentSnapshot.get("product_ID_"+x)
                                                 ,documentSnapshot.get("product_image_"+x).toString()
                                                 ,documentSnapshot.get("product_title_"+x).toString()
                                                 ,documentSnapshot.get("product_author_"+x).toString()
                                                 ,documentSnapshot.get("product_price_"+x).toString()));
                                     }
-                                    lists.get(index).add(new HomePageModel(3,documentSnapshot.get("layout_title").toString(),documentSnapshot.get("layout_background").toString(),GridLayoutModelList));
+                                    lists.get(index).add(new HomePageModel(3,(String)documentSnapshot.get("layout_title"),(String)documentSnapshot.get("layout_background"),GridLayoutModelList));
                                 }
                             }
                             adapter.notifyDataSetChanged();

@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity
     private ImageView actionBarLogo;
     private int currentFragment = -1;
     private  NavigationView navigationView;
+    private Dialog signInDialog;
 
     public static DrawerLayout drawer;
 
@@ -83,6 +84,36 @@ public class MainActivity extends AppCompatActivity
         }else{
             navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
         }
+
+        signInDialog = new Dialog(MainActivity.this);
+        signInDialog.setContentView(R.layout.sign_in_dialog);
+        signInDialog.setCancelable(true);
+        signInDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        Button dialogSignInBtn = signInDialog.findViewById(R.id.sign_in_btn);
+        Button dialogSignUpBtn = signInDialog.findViewById(R.id.sign_up_btn);
+        final Intent registerIntent = new Intent(MainActivity.this,RegisterActivity.class);
+
+        dialogSignInBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SignInFragment.disableCloseBtn = true;
+                SignUpFragment.disableCloseBtn = true;
+                signInDialog.dismiss();
+                setSignUpFragment = false;
+                startActivity(registerIntent);
+            }
+        });
+        dialogSignUpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SignInFragment.disableCloseBtn = true;
+                SignUpFragment.disableCloseBtn = true;
+                signInDialog.dismiss();
+                setSignUpFragment = true;
+                startActivity(registerIntent);
+            }
+        });
     }
 
     @Override
@@ -137,35 +168,11 @@ public class MainActivity extends AppCompatActivity
             //todo: notification
             return true;
         } else if (id == R.id.main_cart_icon) {
-            final Dialog signInDialog = new Dialog(MainActivity.this);
-            signInDialog.setContentView(R.layout.sign_in_dialog);
-            signInDialog.setCancelable(true);
-            signInDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-
-            Button dialogSignInBtn = signInDialog.findViewById(R.id.sign_in_btn);
-            Button dialogSignUpBtn = signInDialog.findViewById(R.id.sign_up_btn);
-            final Intent registerIntent = new Intent(MainActivity.this,RegisterActivity.class);
-
-            dialogSignInBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    signInDialog.dismiss();
-                    setSignUpFragment = false;
-                    startActivity(registerIntent);
-                }
-            });
-
-            dialogSignUpBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    signInDialog.dismiss();
-                    setSignUpFragment = true;
-                    startActivity(registerIntent);
-                }
-            });
-            signInDialog.show();
-
-            // gotoFragment("My Cart",new MyCartFragment(),CART_FRAGMENT);
+            if (currentUser == null) {
+                signInDialog.show();
+            }else {
+                gotoFragment("My Cart", new MyCartFragment(), CART_FRAGMENT);
+            }
             return true;
         } else if (id == android.R.id.home){
             if (showCart){
@@ -192,29 +199,34 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        if (id == R.id.nav_my_shelf) {
-            actionBarLogo.setVisibility(View.VISIBLE);
-            invalidateOptionsMenu();
-            setFragment(new HomeFragment(),HOME_FRAGMENT);
-        } else if (id == R.id.nav_my_orders) {
-            gotoFragment("My Orders",new MyOrdersFragment(),ORDERS_FRAGMENT);
-        } else if (id == R.id.nav_my_rewards) {
-            gotoFragment("My Rewards",new MyRewardsFragment(),REWARDS_FRAGMENT);
-        } else if (id == R.id.nav_my_cart) {
-            gotoFragment("My Cart",new MyCartFragment(),CART_FRAGMENT);
-        } else if (id == R.id.nav_my_wishlist) {
-            gotoFragment("My Wishlist",new MyWishlistFragment(),WISHLIST_FRAGMENT);
-        } else if (id == R.id.nav_my_account) {
-            gotoFragment("My Account",new MyAccountFragment(),ACCOUNT_FRAGMENT);
-        }else if (id == R.id.nav_signout){
-
-        }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
+
+        if (currentUser != null) {
+            int id = item.getItemId();
+            if (id == R.id.nav_my_shelf) {
+                actionBarLogo.setVisibility(View.VISIBLE);
+                invalidateOptionsMenu();
+                setFragment(new HomeFragment(), HOME_FRAGMENT);
+            } else if (id == R.id.nav_my_orders) {
+                gotoFragment("My Orders", new MyOrdersFragment(), ORDERS_FRAGMENT);
+            } else if (id == R.id.nav_my_rewards) {
+                gotoFragment("My Rewards", new MyRewardsFragment(), REWARDS_FRAGMENT);
+            } else if (id == R.id.nav_my_cart) {
+                gotoFragment("My Cart", new MyCartFragment(), CART_FRAGMENT);
+            } else if (id == R.id.nav_my_wishlist) {
+                gotoFragment("My Wishlist", new MyWishlistFragment(), WISHLIST_FRAGMENT);
+            } else if (id == R.id.nav_my_account) {
+                gotoFragment("My Account", new MyAccountFragment(), ACCOUNT_FRAGMENT);
+            } else if (id == R.id.nav_signout) {
+
+            }
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
+        }else{
+            drawer.closeDrawer(GravityCompat.START);
+            signInDialog.show();
+            return false;
+        }
     }
 
     private void setFragment(Fragment fragment,int fragmentNo){

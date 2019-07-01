@@ -38,10 +38,8 @@ public class HorizontalProductScrollAdapter extends RecyclerView.Adapter<Horizon
         String author = horizontalProductScrollModelList.get(position).getProductAuthor();
         String price = horizontalProductScrollModelList.get(position).getProductPrice();
 
-        viewHolder.setProductImage(resource);
-        viewHolder.setProductTitle(title);
-        viewHolder.setProductAuthor(author);
-        viewHolder.setProductPrice(price);
+        viewHolder.setData(resource,title,author,price);
+
     }
 
     @Override
@@ -66,25 +64,23 @@ public class HorizontalProductScrollAdapter extends RecyclerView.Adapter<Horizon
             productAuthor = itemView.findViewById(R.id.h_s_product_author);
             productPrice = itemView.findViewById(R.id.h_s_product_price);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent productDetailsIntent = new Intent(itemView.getContext(),ProductDetailsActivity.class);
-                    itemView.getContext().startActivity(productDetailsIntent);
-                }
-            });
         }
 
-        private void setProductImage(String resource){
-            Glide.with(itemView.getContext()).load(resource).apply(new RequestOptions().placeholder(R.mipmap.home)).into(productImage);
-        }
-        private void setProductTitle(String title){
+        private void setData(String resource,String title,String author,String price){
+            Glide.with(itemView.getContext()).load(resource).apply(new RequestOptions().placeholder(R.mipmap.icon_palceholder)).into(productImage);
             productTitle.setText(title);
+            productAuthor.setText(author);
+            productPrice.setText("Rs."+price+"/-");
+
+            if (!title.equals("")) {
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent productDetailsIntent = new Intent(itemView.getContext(), ProductDetailsActivity.class);
+                        itemView.getContext().startActivity(productDetailsIntent);
+                    }
+                });
+            }
         }
-        private void setProductAuthor(String author){
-          productAuthor.setText(author);
-        }
-        private void setProductPrice(String price){
-            productPrice.setText("Rs."+price+"/-"); }
     }
 }

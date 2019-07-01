@@ -55,12 +55,16 @@ public class HomeFragment extends Fragment {
     }
     private ConnectivityManager connectivityManager;
     private NetworkInfo networkInfo;
+
     public static SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView categoryRecyclerView;
+    private List<CategoryModel> categoryModelFakeList = new ArrayList<>();
     private CategoryAdaptor categoryAdaptor;
     private RecyclerView homePageRecyclerView;
+    private List<HomePageModel> homePageModelFakeList = new ArrayList<>();
     private HomePageAdapter adapter;
     private ImageView noInternetConnection;
+    private Button retryBtn;
 
 
 
@@ -71,45 +75,94 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         swipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         noInternetConnection = view.findViewById(R.id.no_internet_connection);
+        categoryRecyclerView = view.findViewById(R.id.category_recyclerview);
+        homePageRecyclerView = view.findViewById(R.id.home_page_recyclerview);
+        retryBtn = view.findViewById(R.id.retry_btn);
+
+        swipeRefreshLayout.setColorSchemeColors(getContext().getResources().getColor(R.color.colorPrimary),getContext().getResources().getColor(R.color.colorPrimary),getContext().getResources().getColor(R.color.colorPrimary));
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        categoryRecyclerView.setLayoutManager(layoutManager);
+
+        LinearLayoutManager testingLayoutManager = new LinearLayoutManager(getContext());
+        testingLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        homePageRecyclerView.setLayoutManager(testingLayoutManager);
+
+        /////categories fake list
+        categoryModelFakeList.add(new CategoryModel("null",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        categoryModelFakeList.add(new CategoryModel("",""));
+        /////categories fake list
+
+        /////Home page fake list
+        List<SliderModel> sliderModelFakeList = new ArrayList<>();
+        sliderModelFakeList.add(new SliderModel("null","#dfdfdf"));
+        sliderModelFakeList.add(new SliderModel("null","#dfdfdf"));
+        sliderModelFakeList.add(new SliderModel("null","#dfdfdf"));
+        sliderModelFakeList.add(new SliderModel("null","#dfdfdf"));
+        sliderModelFakeList.add(new SliderModel("null","#dfdfdf"));
+
+        List<HorizontalProductScrollModel> horizontalProductScrollModelFakeList = new ArrayList<>();
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+        horizontalProductScrollModelFakeList.add(new HorizontalProductScrollModel("","","","",""));
+
+        homePageModelFakeList.add(new HomePageModel(0,sliderModelFakeList));
+        homePageModelFakeList.add(new HomePageModel(1,"","#dfdfdf"));
+        homePageModelFakeList.add(new HomePageModel(2,"","#dfdfdf",horizontalProductScrollModelFakeList,new ArrayList<WishlistModel>()));
+        homePageModelFakeList.add(new HomePageModel(3,"","#dfdfdf",horizontalProductScrollModelFakeList));
+        /////Home page fake list
+
+        categoryAdaptor = new CategoryAdaptor(categoryModelFakeList);
+
+
+        adapter = new HomePageAdapter(homePageModelFakeList);
 
         connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         networkInfo = connectivityManager.getActiveNetworkInfo();
-
         if (networkInfo != null && networkInfo.isConnected() == true) {
             MainActivity.drawer.setDrawerLockMode(0);
             noInternetConnection.setVisibility(View.GONE);
-            categoryRecyclerView = view.findViewById(R.id.category_recyclerview);
-            LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-            layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-            categoryRecyclerView.setLayoutManager(layoutManager);
-            categoryAdaptor = new CategoryAdaptor(categoryModelList);
-            categoryRecyclerView.setAdapter(categoryAdaptor);
+            retryBtn.setVisibility(View.GONE);
+            categoryRecyclerView.setVisibility(View.VISIBLE);
+            homePageRecyclerView.setVisibility(View.VISIBLE);
 
             if (categoryModelList.size() == 0){
-                loadCategories(categoryAdaptor,getContext());
+                loadCategories(categoryRecyclerView,getContext());
             }else {
+                categoryAdaptor = new CategoryAdaptor(categoryModelList);
                 categoryAdaptor.notifyDataSetChanged();
             }
-            homePageRecyclerView = view.findViewById(R.id.home_page_recyclerview);
-            LinearLayoutManager testingLayoutManager = new LinearLayoutManager(getContext());
-            testingLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-            homePageRecyclerView.setLayoutManager(testingLayoutManager);
-
-
+            categoryRecyclerView.setAdapter(categoryAdaptor);
             if (lists.size() == 0){
                 loadedCategoriesNames.add("HOME");
                 lists.add(new ArrayList<HomePageModel>());
-                adapter = new HomePageAdapter(lists.get(0));
-                loadFragmentData(adapter,getContext(),0,"Home  ");
+                loadFragmentData(homePageRecyclerView,getContext(),0,"Home  ");
             }else {
                 adapter = new HomePageAdapter(lists.get(0));
                 adapter.notifyDataSetChanged();
             }
             homePageRecyclerView.setAdapter(adapter);
+
         }else{
+            categoryRecyclerView.setVisibility(View.GONE);
+            homePageRecyclerView.setVisibility(View.GONE);
             MainActivity.drawer.setDrawerLockMode(1);
             Glide.with(this).load(R.drawable.no_internet_connection).into(noInternetConnection);
             noInternetConnection.setVisibility(View.VISIBLE);
+            retryBtn.setVisibility(View.VISIBLE);
         }
         //// refresh layout
 
@@ -117,25 +170,52 @@ public class HomeFragment extends Fragment {
             @Override
             public void onRefresh() {
                 swipeRefreshLayout.setRefreshing(true);
+                reloadPage();
+            }
+        });
+        //// refresh layout
 
-                categoryModelList.clear();
-                lists.clear();
-                loadedCategoriesNames.clear();
-                if (networkInfo != null && networkInfo.isConnected() == true) {
-                    noInternetConnection.setVisibility(View.GONE);
-                    loadCategories(categoryAdaptor,getContext());
-                    loadedCategoriesNames.add("HOME");
-                    lists.add(new ArrayList<HomePageModel>());
-
-                    loadFragmentData(adapter,getContext(),0,"Home");
-                }else {
-                    Glide.with(getContext()).load(R.drawable.no_internet_connection).into(noInternetConnection);
-                    noInternetConnection.setVisibility(View.VISIBLE);
-                }
+        retryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reloadPage();
             }
         });
 
-        //// refresh layout
         return view;
+    }
+
+    private void reloadPage(){
+        networkInfo = connectivityManager.getActiveNetworkInfo();
+        categoryModelList.clear();
+        lists.clear();
+        loadedCategoriesNames.clear();
+        if (networkInfo != null && networkInfo.isConnected() == true) {
+            noInternetConnection.setVisibility(View.GONE);
+            retryBtn.setVisibility(View.GONE);
+            categoryRecyclerView.setVisibility(View.VISIBLE);
+            homePageRecyclerView.setVisibility(View.VISIBLE);
+
+            categoryAdaptor = new CategoryAdaptor(categoryModelFakeList);
+            adapter = new HomePageAdapter(homePageModelFakeList);
+            categoryRecyclerView.setAdapter(categoryAdaptor);
+            homePageRecyclerView.setAdapter(adapter);
+
+            loadCategories(categoryRecyclerView,getContext());
+
+            loadedCategoriesNames.add("HOME");
+            lists.add(new ArrayList<HomePageModel>());
+            loadFragmentData(homePageRecyclerView,getContext(),0,"Home");
+
+        }else {
+            Toast.makeText(getContext(),"No Internet Connection!!",Toast.LENGTH_SHORT).show();
+            categoryRecyclerView.setVisibility(View.GONE);
+            homePageRecyclerView.setVisibility(View.GONE);
+            Glide.with(getContext()).load(R.drawable.no_internet_connection).into(noInternetConnection);
+            noInternetConnection.setVisibility(View.VISIBLE);
+            retryBtn.setVisibility(View.VISIBLE);
+
+            swipeRefreshLayout.setRefreshing(false);
+        }
     }
 }

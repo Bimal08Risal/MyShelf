@@ -3,6 +3,7 @@ package com.example.myshelf;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -28,7 +29,7 @@ public class DBqueries {
     public static List<String> loadedCategoriesNames = new ArrayList<>();
 
 
-    public static void loadCategories(final CategoryAdaptor categoryAdaptor,final Context context){
+    public static void loadCategories(final RecyclerView categoryRecyclerView,final Context context){
 
         firebaseFirestore.collection("CATEGORIES").orderBy("index").get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -38,7 +39,9 @@ public class DBqueries {
                             for (QueryDocumentSnapshot documentSnapshot : task.getResult()){
                                 categoryModelList.add(new CategoryModel((String)documentSnapshot.get("icon"), (String)documentSnapshot.get("categoryName")));
                             }
-                            categoryAdaptor.notifyDataSetChanged();
+                            CategoryAdaptor categoryAdapter = new CategoryAdaptor(categoryModelList);
+                            categoryRecyclerView.setAdapter(categoryAdapter);
+                            categoryAdapter.notifyDataSetChanged();
                         } else {
                             String error = task.getException().getMessage();
                             Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
@@ -47,7 +50,7 @@ public class DBqueries {
                 });
     }
 
-    public static void loadFragmentData(final HomePageAdapter adapter, final Context context, final int index, String categoryName){
+    public static void loadFragmentData(final RecyclerView homePageRecyclerView, final Context context, final int index, String categoryName){
         firebaseFirestore.collection("CATEGORIES")
                 .document(categoryName.toUpperCase())
                 .collection("TOP_DEALS").orderBy("index").get()
@@ -105,7 +108,9 @@ public class DBqueries {
                                     lists.get(index).add(new HomePageModel(3,(String)documentSnapshot.get("layout_title"),(String)documentSnapshot.get("layout_background"),GridLayoutModelList));
                                 }
                             }
-                            adapter.notifyDataSetChanged();
+                            HomePageAdapter homePageAdapter = new HomePageAdapter(lists.get(index));
+                            homePageRecyclerView.setAdapter(homePageAdapter);
+                            homePageAdapter.notifyDataSetChanged();
                             HomeFragment.swipeRefreshLayout.setRefreshing(false);
                         } else {
                             String error = task.getException().getMessage();

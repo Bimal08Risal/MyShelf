@@ -56,6 +56,8 @@ public class SignInFragment extends Fragment {
     private FirebaseAuth firebaseAuth;
     private String emailPattern =  "[a-zA-Z0-9._-]+@[a-z]+.[a-z]+";
 
+    public static boolean disableCloseBtn = false;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,6 +79,12 @@ public class SignInFragment extends Fragment {
         progressBar = view.findViewById(R.id.sign_in_prohressbar);
 
         firebaseAuth = FirebaseAuth.getInstance();
+
+        if (disableCloseBtn){
+            closeBtn.setVisibility(View.GONE);
+        }else {
+            closeBtn.setVisibility(View.VISIBLE);
+        }
         return view;
     }
 
@@ -96,6 +104,13 @@ public class SignInFragment extends Fragment {
             public void onClick(View v) {
                 onResetPasswordFragment = true;
                 setFragment(new ResetPasswordFragment());
+            }
+        });
+
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainIntent();
             }
         });
 
@@ -129,13 +144,6 @@ public class SignInFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
 
-            }
-        });
-
-        closeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mainIntent();
             }
         });
 
@@ -202,8 +210,12 @@ public class SignInFragment extends Fragment {
     }
 
     private void mainIntent(){
-        Intent mainIntent = new Intent(getActivity(),MainActivity.class);
-        startActivity(mainIntent);
+        if (disableCloseBtn){
+            disableCloseBtn = false;
+        }else {
+            Intent mainIntent = new Intent(getActivity(), MainActivity.class);
+            startActivity(mainIntent);
+        }
         getActivity().finish();
     }
 }

@@ -33,7 +33,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.myshelf.DBqueries.currentUser;
 import static com.example.myshelf.MainActivity.showCart;
+import static com.example.myshelf.RegisterActivity.setSignUpFragment;
 
 public class ProductDetailsActivity extends AppCompatActivity {
 
@@ -46,6 +48,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
     private ImageView codIndicator;
     private TextView tvCodIndicator;
     private TabLayout viewPagerIndicator;
+
+    private LinearLayout coupenRedemptionLayout;
     private Button coupenRedeemBtn;
 
     private TextView rewardTitle;
@@ -65,6 +69,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
     /////////// rating layout
 
     private Button buyNowBtn;
+    private LinearLayout addToCartBtn;
 
     private static boolean ALREADY_ADDED_TO_WISHLIST = false;
     private FloatingActionButton addToWishlistBtn;
@@ -78,6 +83,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
     private static RecyclerView coupensRecyclerView;
     private static LinearLayout selectedCoupen;
     //////// coupendialog
+
+    private Dialog signInDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +114,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
         ratingsNoContainer = findViewById(R.id.ratings_numbers_container);
         totalRatingsFigure = findViewById(R.id.total_ratings_figure);
         ratingsProgressBarContainer = findViewById(R.id.rating_progressbar_container);
+        addToCartBtn = findViewById(R.id.add_to_cart_btn);
+        coupenRedemptionLayout = findViewById(R.id.coupen_redemption_layout);
 
 
         firebaseFirestore = FirebaseFirestore.getInstance();
@@ -170,12 +179,16 @@ public class ProductDetailsActivity extends AppCompatActivity {
         addToWishlistBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ALREADY_ADDED_TO_WISHLIST = false;
-                if (ALREADY_ADDED_TO_WISHLIST){
-                    addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("9E9E9E")));
+                if (currentUser == null){
+                    signInDialog.show();
                 }else {
-                    ALREADY_ADDED_TO_WISHLIST = true;
-                    addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+                    ALREADY_ADDED_TO_WISHLIST = false;
+                    if (ALREADY_ADDED_TO_WISHLIST) {
+                        addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("9E9E9E")));
+                    } else {
+                        ALREADY_ADDED_TO_WISHLIST = true;
+                        addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+                    }
                 }
             }
         });
@@ -187,7 +200,11 @@ public class ProductDetailsActivity extends AppCompatActivity {
             rateNowContainer.getChildAt(x).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    setRating(starPosition);
+                    if (currentUser == null){
+                        signInDialog.show();
+                    }else {
+                        setRating(starPosition);
+                    }
                 }
             });
         }
@@ -196,8 +213,23 @@ public class ProductDetailsActivity extends AppCompatActivity {
         buyNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent deliveryIntent = new Intent(ProductDetailsActivity.this,DeliveryActivity.class);
-                startActivity(deliveryIntent);
+                if (currentUser == null){
+                    signInDialog.show();
+                }else {
+                    Intent deliveryIntent = new Intent(ProductDetailsActivity.this, DeliveryActivity.class);
+                    startActivity(deliveryIntent);
+                }
+            }
+        });
+
+        addToCartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentUser == null){
+                    signInDialog.show();
+                }else {
+                    /////todo: add to cart
+                }
             }
         });
 
@@ -207,7 +239,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
         checkCoupenPriceDialog.setCancelable(true);
         checkCoupenPriceDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        ImageView toggleREcyclerView = checkCoupenPriceDialog.findViewById(R.id.toggle_recyclerview);
+        ImageView toggleRecyclerView = checkCoupenPriceDialog.findViewById(R.id.toggle_recyclerview);
         coupensRecyclerView = checkCoupenPriceDialog.findViewById(R.id.coupens_recyclerview);
         selectedCoupen = checkCoupenPriceDialog.findViewById(R.id.selected_coupen);
 
@@ -237,7 +269,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
         coupensRecyclerView.setAdapter(myRewardsAdapter);
         myRewardsAdapter.notifyDataSetChanged();
 
-        toggleREcyclerView.setOnClickListener(new View.OnClickListener() {
+        toggleRecyclerView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDialogRecyclerView();
@@ -251,6 +283,42 @@ public class ProductDetailsActivity extends AppCompatActivity {
                 checkCoupenPriceDialog.show();
             }
         });
+
+        ////// signin dialog
+        signInDialog = new Dialog(ProductDetailsActivity.this);
+        signInDialog.setContentView(R.layout.sign_in_dialog);
+        signInDialog.setCancelable(true);
+        signInDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        Button dialogSignInBtn = signInDialog.findViewById(R.id.sign_in_btn);
+        Button dialogSignUpBtn = signInDialog.findViewById(R.id.sign_up_btn);
+        final Intent registerIntent = new Intent(ProductDetailsActivity.this,RegisterActivity.class);
+
+        dialogSignInBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SignInFragment.disableCloseBtn = true;
+                SignUpFragment.disableCloseBtn = true;
+                signInDialog.dismiss();
+                setSignUpFragment = false;
+                startActivity(registerIntent);
+            }
+        });
+        dialogSignUpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SignInFragment.disableCloseBtn = true;
+                SignUpFragment.disableCloseBtn = true;
+                signInDialog.dismiss();
+                setSignUpFragment = true;
+                startActivity(registerIntent);
+            }
+        });
+        ////// signin dialog
+
+        if (currentUser == null){
+            coupenRedemptionLayout.setVisibility(View.GONE);
+        }
     }
 
     public static void showDialogRecyclerView(){
@@ -295,10 +363,14 @@ public class ProductDetailsActivity extends AppCompatActivity {
             //todo: search
             return true;
         } else if (id == R.id.main_cart_icon) {
-            Intent cartIntent = new Intent(ProductDetailsActivity.this,MainActivity.class);
-            showCart = true;
-            startActivity(cartIntent);
-            return true;
+            if (currentUser == null){
+                signInDialog.show();
+            }else {
+                Intent cartIntent = new Intent(ProductDetailsActivity.this, MainActivity.class);
+                showCart = true;
+                startActivity(cartIntent);
+                return true;
+            }
         }
 
         return super.onOptionsItemSelected(item);

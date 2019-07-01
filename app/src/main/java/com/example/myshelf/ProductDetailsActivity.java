@@ -27,13 +27,16 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.example.myshelf.DBqueries.currentUser;
 import static com.example.myshelf.MainActivity.showCart;
 import static com.example.myshelf.RegisterActivity.setSignUpFragment;
 
@@ -85,6 +88,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
     //////// coupendialog
 
     private Dialog signInDialog;
+    private Dialog loadingDialog;
+    private FirebaseUser currentUser;
+    private String productID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,13 +123,21 @@ public class ProductDetailsActivity extends AppCompatActivity {
         addToCartBtn = findViewById(R.id.add_to_cart_btn);
         coupenRedemptionLayout = findViewById(R.id.coupen_redemption_layout);
 
+        /////loading dialog
+        loadingDialog = new Dialog(ProductDetailsActivity.this);
+        loadingDialog.setContentView(R.layout.loading_progress_dialog);
+        loadingDialog.setCancelable(false);
+        loadingDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.slider_background));
+        loadingDialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        loadingDialog.show();
+        /////loading dialog
 
         firebaseFirestore = FirebaseFirestore.getInstance();
 
 
         final List<String> productImages = new ArrayList<>();
-
-        firebaseFirestore.collection("PRODUCTS").document("0kopGDVq3zasMajQMMzo")
+        productID = getIntent().getStringExtra("PRODUCT_ID");
+        firebaseFirestore.collection("PRODUCTS").document(productID)
                 .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -167,7 +181,21 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     }
                     totalRatingsFigure.setText(String.valueOf((long)documentSnapshot.get("total_ratings")));
 
+                    if (DBqueries.wishList.size() == 0){
+                        DBqueries.loadWishList(ProductDetailsActivity.this,loadingDialog);
+                    }else {
+                        loadingDialog.dismiss();
+                    }
+
+                    if (DBqueries.wishList.contains(productID)){
+                        ALREADY_ADDED_TO_WISHLIST = true;
+                        addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+                    }else {
+                        ALREADY_ADDED_TO_WISHLIST = false;
+                    }
+
                 }else {
+                    loadingDialog.dismiss();
                     String error = task.getException().getMessage();
                     Toast.makeText(ProductDetailsActivity.this,error,Toast.LENGTH_SHORT).show();
                 }
@@ -186,8 +214,41 @@ public class ProductDetailsActivity extends AppCompatActivity {
                     if (ALREADY_ADDED_TO_WISHLIST) {
                         addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("9E9E9E")));
                     } else {
-                        ALREADY_ADDED_TO_WISHLIST = true;
-                        addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+
+                        Map<String,Object> addProduct = new HashMap<>();
+                        addProduct.put("product_ID_"+String.valueOf(DBqueries.wishList.size()),productID);
+
+                        firebaseFirestore.collection("USERS").document(currentUser.getUid()).collection("USER_DATA").document("MY_WISHLIST")
+                                .set(addProduct).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()){
+
+                                    Map<String,Object> updateListSize = new HashMap<>();
+                                    updateListSize.put("list_size", (long) (DBqueries.wishList.size()+1));
+
+                                    firebaseFirestore.collection("USERS").document(currentUser.getUid()).collection("USER_DATA").document("MY_WISHLIST")
+                                            .update(updateListSize).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()){
+                                                ALREADY_ADDED_TO_WISHLIST = true;
+                                                addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+                                                DBqueries.wishList.add(productID);
+                                                Toast.makeText(ProductDetailsActivity.this, "Added to wishlist successfully!!", Toast.LENGTH_SHORT).show();
+                                            }else {
+                                                String error = task.getException().getMessage();
+                                                Toast.makeText(ProductDetailsActivity.this,error,Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+
+                                }else {
+                                    String error = task.getException().getMessage();
+                                    Toast.makeText(ProductDetailsActivity.this,error,Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
                     }
                 }
             }
@@ -316,8 +377,16 @@ public class ProductDetailsActivity extends AppCompatActivity {
         });
         ////// signin dialog
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null){
             coupenRedemptionLayout.setVisibility(View.GONE);
+        }else{
+            coupenRedemptionLayout.setVisibility(View.VISIBLE);
         }
     }
 

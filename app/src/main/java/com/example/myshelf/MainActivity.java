@@ -26,9 +26,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import static com.example.myshelf.RegisterActivity.setSignUpFragment;
-import static com.example.myshelf.DBqueries.currentUser;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     private int currentFragment = -1;
     private  NavigationView navigationView;
     private Dialog signInDialog;
+    private FirebaseUser currentUser;
 
     public static DrawerLayout drawer;
 
@@ -77,12 +80,6 @@ public class MainActivity extends AppCompatActivity
             drawer.addDrawerListener(toggle);
             toggle.syncState();
             setFragment(new HomeFragment(), HOME_FRAGMENT);
-        }
-
-        if (currentUser == null){
-            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
-        }else{
-            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
         }
 
         signInDialog = new Dialog(MainActivity.this);
@@ -119,7 +116,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null){
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
+        }else{
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
+        }
     }
 
     @Override
@@ -218,7 +220,10 @@ public class MainActivity extends AppCompatActivity
             } else if (id == R.id.nav_my_account) {
                 gotoFragment("My Account", new MyAccountFragment(), ACCOUNT_FRAGMENT);
             } else if (id == R.id.nav_signout) {
-
+                FirebaseAuth.getInstance().signOut();
+                Intent registerIntent = new Intent(MainActivity.this,RegisterActivity.class);
+                startActivity(registerIntent);
+                finish();
             }
             drawer.closeDrawer(GravityCompat.START);
             return true;

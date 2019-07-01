@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 
 import static com.example.myshelf.RegisterActivity.setSignUpFragment;
+import static com.example.myshelf.DBqueries.currentUser;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity
     private int currentFragment = -1;
     private  NavigationView navigationView;
 
+    public static DrawerLayout drawer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +57,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
 
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -74,6 +77,18 @@ public class MainActivity extends AppCompatActivity
             toggle.syncState();
             setFragment(new HomeFragment(), HOME_FRAGMENT);
         }
+
+        if (currentUser == null){
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
+        }else{
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
     }
 
     @Override
@@ -125,7 +140,6 @@ public class MainActivity extends AppCompatActivity
             final Dialog signInDialog = new Dialog(MainActivity.this);
             signInDialog.setContentView(R.layout.sign_in_dialog);
             signInDialog.setCancelable(true);
-
             signInDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
 
             Button dialogSignInBtn = signInDialog.findViewById(R.id.sign_in_btn);

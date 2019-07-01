@@ -7,6 +7,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -15,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DBqueries {
+
+    public static FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+    public static FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
     public static FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
     public static List<CategoryModel> categoryModelList = new ArrayList<>();
@@ -74,7 +79,8 @@ public class DBqueries {
                                                 ,documentSnapshot.get("product_author_"+x).toString()
                                                 ,documentSnapshot.get("product_price_"+x).toString()));
 
-                                        viewAllProductList.add(new WishlistModel((String)documentSnapshot.get("product_image"+x)
+                                        viewAllProductList.add(new WishlistModel(documentSnapshot.get("product_ID_"+x).toString()
+                                                ,(String)documentSnapshot.get("product_image"+x)
                                                 ,documentSnapshot.get("product_title_"+x).toString()
                                                 ,(long)documentSnapshot.get("free_coupens_"+x)
                                                 ,documentSnapshot.get("average_rating_"+x).toString()

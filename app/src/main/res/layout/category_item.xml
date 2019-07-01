@@ -18,7 +18,7 @@
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/home" />
+        app:srcCompat="@mipmap/icon_palceholder" />
 
     <TextView
         android:id="@+id/category_name"

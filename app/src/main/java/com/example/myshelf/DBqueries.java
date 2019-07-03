@@ -2,6 +2,8 @@ package com.example.myshelf;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
@@ -17,7 +19,12 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.example.myshelf.ProductDetailsActivity.addToWishlistBtn;
+import static com.example.myshelf.ProductDetailsActivity.productID;
 
 public class DBqueries {
 
@@ -26,11 +33,16 @@ public class DBqueries {
 
     public static List<List<HomePageModel>> lists = new ArrayList<>();
     public static List<String> loadedCategoriesNames = new ArrayList<>();
+
     public static List<String> wishList = new ArrayList<>();
+    public static List<WishlistModel> wishlistModelList = new ArrayList<>();
+
+    public static List<String> myRatedIds = new ArrayList<>();
+    public static List<Long> myRating = new ArrayList<>();
 
 
     public static void loadCategories(final RecyclerView categoryRecyclerView,final Context context){
-
+        categoryModelList.clear();
         firebaseFirestore.collection("CATEGORIES").orderBy("index").get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -120,8 +132,8 @@ public class DBqueries {
                 });
     }
 
-    public static void loadWishList(final Context context, final Dialog dialog){
-
+    public static void loadWishList(final Context context, final Dialog dialog,final boolean loadProductData){
+        wishList.clear();
         firebaseFirestore.collection("USERS").document(FirebaseAuth.getInstance().getUid()).collection("USER_DATA").document("MY_WISHLIST")
                 .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -129,7 +141,48 @@ public class DBqueries {
 
                 if(task.isSuccessful()){
                     for (long x = 0;x < (long)task.getResult().get("list_size");x++){
-                        wishList.add(task.getResult().get("product_ID_"+x).toString());
+                        wishList.add((String) task.getResult().get("product_ID_"+x));
+
+                        if (DBqueries.wishList.contains(productID)){
+                            ProductDetailsActivity.ALREADY_ADDED_TO_WISHLIST = true;
+                            if (addToWishlistBtn != null) {
+                                addToWishlistBtn.setSupportImageTintList(context.getResources().getColorStateList(R.color.colorPrimary));
+                            }
+                        }else {
+                            if (addToWishlistBtn != null) {
+                                addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
+                            }
+                            ProductDetailsActivity.ALREADY_ADDED_TO_WISHLIST = false;
+                        }
+
+                        if (loadProductData) {
+                            wishlistModelList.clear();
+                            final String productId = (String)task.getResult().get("product_ID_" + x);
+                            firebaseFirestore.collection("PRODUCTS").document(productId)
+                                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        wishlistModelList.add(new WishlistModel(productId
+                                                , (String) task.getResult().get("product_image_1")
+                                                , (String) task.getResult().get("product_title")
+                                                , (Long) task.getResult().get("free_coupens")
+                                                , task.getResult().get("average_rating").toString()
+                                                , (long) task.getResult().get("total_ratings")
+                                                , (String) task.getResult().get("product_price")
+                                                , task.getResult().get("cutted_price").toString()
+                                                , (boolean) task.getResult().get("COD")
+                                        ));
+
+                                        MyWishlistFragment.wishlistAdapter.notifyDataSetChanged();
+
+                                    } else {
+                                        String error = task.getException().getMessage();
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+                        }
                     }
                 }else{
                     String error = task.getException().getMessage();
@@ -138,5 +191,78 @@ public class DBqueries {
                 dialog.dismiss();
             }
         });
+    }
+
+    public static void removeFromWishlist(final int index, final Context context){
+
+        wishList.remove(index);
+        Map<String,Object> updateWishlist = new HashMap<>();
+
+        for (int x = 0;x < wishList.size();x++){
+            updateWishlist.put("product_ID_"+ x,wishList.get(x));
+        }
+        updateWishlist.put("list_size",(long)wishList.size());
+
+        firebaseFirestore.collection("USERS").document(FirebaseAuth.getInstance().getUid()).collection("USER_DATA").document("MY_WISHLIST")
+                .set(updateWishlist).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()){
+                    if (wishlistModelList.size() != 0){
+                        wishlistModelList.remove(index);
+                        MyWishlistFragment.wishlistAdapter.notifyDataSetChanged();
+                    }
+                    ProductDetailsActivity.ALREADY_ADDED_TO_WISHLIST = false;
+                    Toast.makeText(context, "Removed successfully!!", Toast.LENGTH_SHORT).show();
+                }else {
+                    if (addToWishlistBtn != null) {
+                        addToWishlistBtn.setSupportImageTintList(context.getResources().getColorStateList(R.color.colorPrimary));
+                    }
+                    String error = task.getException().getMessage();
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+                }
+                ProductDetailsActivity.running_wishlist_query = false;
+            }
+        });
+
+    }
+
+    public static void loadRatingList(final Context context){
+        if (!ProductDetailsActivity.running_rating_query) {
+            ProductDetailsActivity.running_rating_query = true;
+            myRatedIds.clear();
+            myRating.clear();
+            firebaseFirestore.collection("USERS").document(FirebaseAuth.getInstance().getUid()).collection("USER_DATA").document("MY_RATINGS")
+                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+
+                        for (long x = 0; x < (long) task.getResult().get("list_size"); x++) {
+                            myRatedIds.add(task.getResult().get("product_ID_" + x).toString());
+                            myRating.add((long) task.getResult().get("rating_" + x));
+                            if (task.getResult().get("product_ID_" + x).toString().equals(productID)) {
+                                ProductDetailsActivity.initialRating = Integer.parseInt(String.valueOf((long) task.getResult().get("rating_" + x))) - 1;
+                                if (ProductDetailsActivity.rateNowContainer != null) {
+                                    ProductDetailsActivity.setRating(ProductDetailsActivity.initialRating);
+                                }
+                            }
+                        }
+                    } else {
+                        String error = task.getException().getMessage();
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+                    }
+                    ProductDetailsActivity.running_rating_query = false;
+                }
+            });
+        }
+    }
+
+    public static void clearData(){
+        categoryModelList.clear();
+        lists.clear();
+        loadedCategoriesNames.clear();
+        wishList.clear();
+        wishlistModelList.clear();
     }
 }

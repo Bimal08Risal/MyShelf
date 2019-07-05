@@ -1,5 +1,6 @@
 package com.example.myshelf;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.myshelf.DBqueries.cartList;
 import static com.example.myshelf.MainActivity.showCart;
 import static com.example.myshelf.RegisterActivity.setSignUpFragment;
 
@@ -46,6 +48,8 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
     public static boolean running_wishlist_query = false;
     public static boolean running_rating_query = false;
+    public static boolean running_cart_query = false;
+    public static Activity productDetailsActivity;
 
     private ViewPager productImagesViewPager;
     private TextView productTitle;
@@ -80,8 +84,10 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
     private Button buyNowBtn;
     private LinearLayout addToCartBtn;
+    public static MenuItem cartItem;
 
     public static boolean ALREADY_ADDED_TO_WISHLIST = false;
+    public static boolean ALREADY_ADDED_TO_CART = false;
     public static FloatingActionButton addToWishlistBtn;
 
     private FirebaseFirestore firebaseFirestore;
@@ -98,6 +104,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
     private Dialog loadingDialog;
     private FirebaseUser currentUser;
     public static String productID;
+    private TextView badgeCount;
 
     private DocumentSnapshot documentSnapshot;
 
@@ -164,7 +171,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
                     productTitle.setText(documentSnapshot.get("product_title").toString());
                     averageRatingMiniView.setText(documentSnapshot.get("average_rating").toString());
-                    totalRatingMiniView.setText("(" + (long) documentSnapshot.get("total_ratings") + ")ratings");
+                    totalRatingMiniView.setText("(" + (long)documentSnapshot.get("total_ratings") + ")ratings");
                     productPrice.setText("Rs." + (String) documentSnapshot.get("product_price") + "/-");
                     cuttedPrice.setText("Rs." + documentSnapshot.get("cutted_price").toString() + "/-");
                     if ((boolean) documentSnapshot.get("COD")) {
@@ -198,6 +205,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
                         if (DBqueries.myRating.size() == 0) {
                             DBqueries.loadRatingList(ProductDetailsActivity.this);
                         }
+                        if (DBqueries.cartList.size() == 0) {
+                            DBqueries.loadCartList(ProductDetailsActivity.this, loadingDialog, false,badgeCount,new TextView(ProductDetailsActivity.this));
+                        }
                         if (DBqueries.wishList.size() == 0) {
                             DBqueries.loadWishList(ProductDetailsActivity.this, loadingDialog, false);
                         } else {
@@ -212,13 +222,77 @@ public class ProductDetailsActivity extends AppCompatActivity {
                         initialRating = Integer.parseInt(String.valueOf(DBqueries.myRating.get(index))) - 1;
                         setRating(initialRating);
                     }
-
+                    if (DBqueries.cartList.contains(productID)) {
+                        ALREADY_ADDED_TO_CART = true;
+                    } else {
+                        ALREADY_ADDED_TO_CART = false;
+                    }
                     if (DBqueries.wishList.contains(productID)) {
                         ALREADY_ADDED_TO_WISHLIST = true;
                         addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
                     } else {
                         addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
                         ALREADY_ADDED_TO_WISHLIST = false;
+                    }
+
+                    if ((boolean)documentSnapshot.get("in_stock")){
+                        addToCartBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (currentUser == null) {
+                                    signInDialog.show();
+                                } else {
+                                    if (!running_cart_query) {
+                                        running_cart_query = true;
+                                        if (ALREADY_ADDED_TO_CART) {
+                                            running_cart_query = false;
+                                            Toast.makeText(ProductDetailsActivity.this, "Already added to cart!!", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Map<String, Object> addProduct = new HashMap<>();
+                                            addProduct.put("product_ID_" + DBqueries.cartList.size(), productID);
+                                            addProduct.put("list_size", (long) (DBqueries.cartList.size() + 1));
+
+                                            firebaseFirestore.collection("USERS").document(currentUser.getUid()).collection("USER_DATA").document("MY_CART")
+                                                    .update(addProduct).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        if (DBqueries.cartItemModelList.size() != 0) {
+                                                            DBqueries.cartItemModelList.add(0,new CartItemModel(CartItemModel.CART_ITEM, productID
+                                                                    , (String) documentSnapshot.get("product_image_1")
+                                                                    , (String) documentSnapshot.get("product_title")
+                                                                    , (Long) documentSnapshot.get("free_coupens")
+                                                                    , (String) documentSnapshot.get("product_price")
+                                                                    , (String) documentSnapshot.get("cutted_price")
+                                                                    , (long) 1
+                                                                    , (long) 0
+                                                                    , (long) 0
+                                                                    ,(boolean) documentSnapshot.get("in_stock")
+                                                            ));
+                                                        }
+                                                        ALREADY_ADDED_TO_CART = true;
+                                                        DBqueries.cartList.add(productID);
+                                                        Toast.makeText(ProductDetailsActivity.this, "Added to cart successfully!!", Toast.LENGTH_SHORT).show();
+                                                        invalidateOptionsMenu();
+                                                        running_cart_query = false;
+                                                    } else {
+                                                        running_cart_query = false;
+                                                        String error = task.getException().getMessage();
+                                                        Toast.makeText(ProductDetailsActivity.this, "error", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }else {
+                        buyNowBtn.setVisibility(View.GONE);
+                        TextView outOfStock = (TextView) addToCartBtn.getChildAt(0);
+                        outOfStock.setText("Out of Stock");
+                        outOfStock.setTextColor(getResources().getColor(R.color.colorPrimary));
+                        outOfStock.setCompoundDrawables(null,null,null,null);
                     }
 
                 } else {
@@ -246,55 +320,37 @@ public class ProductDetailsActivity extends AppCompatActivity {
                         } else {
                             addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
                             Map<String, Object> addProduct = new HashMap<>();
-                            addProduct.put("product_ID_" + String.valueOf(DBqueries.wishList.size()), productID);
+                            addProduct.put("product_ID_" + DBqueries.wishList.size(), productID);
+                            addProduct.put("list_size", (long) (DBqueries.wishList.size() + 1));
 
                             firebaseFirestore.collection("USERS").document(currentUser.getUid()).collection("USER_DATA").document("MY_WISHLIST")
                                     .update(addProduct).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-
-                                        Map<String, Object> updateListSize = new HashMap<>();
-                                        updateListSize.put("list_size", (long) (DBqueries.wishList.size() + 1));
-
-                                        firebaseFirestore.collection("USERS").document(currentUser.getUid()).collection("USER_DATA").document("MY_WISHLIST")
-                                                .update(updateListSize).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-
-                                                    if (DBqueries.wishlistModelList.size() != 0) {
-
-                                                        DBqueries.wishlistModelList.add(new WishlistModel(productID
-                                                                , (String) documentSnapshot.get("product_image_1")
-                                                                , documentSnapshot.get("product_title").toString()
-                                                                , (long) documentSnapshot.get("free_coupens")
-                                                                , documentSnapshot.get("average_rating").toString()
-                                                                , (long) documentSnapshot.get("total_ratings")
-                                                                , documentSnapshot.get("product_price").toString()
-                                                                , documentSnapshot.get("cutted_price").toString()
-                                                                , (boolean) documentSnapshot.get("COD")
-                                                        ));
-                                                    }
-
-                                                    ALREADY_ADDED_TO_WISHLIST = true;
-                                                    addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
-                                                    DBqueries.wishList.add(productID);
-                                                    Toast.makeText(ProductDetailsActivity.this, "Added to wishlist successfully!!", Toast.LENGTH_SHORT).show();
-                                                } else {
-                                                    addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("9E9E9E")));
-                                                    String error = task.getException().getMessage();
-                                                    Toast.makeText(ProductDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
-                                                }
-                                                running_wishlist_query = false;
-                                            }
-                                        });
-
+                                        if (DBqueries.wishlistModelList.size() != 0) {
+                                            DBqueries.wishlistModelList.add(new WishlistModel(productID
+                                                    , (String) documentSnapshot.get("product_image_1")
+                                                    , documentSnapshot.get("product_title").toString()
+                                                    , (long) documentSnapshot.get("free_coupens")
+                                                    , documentSnapshot.get("average_rating").toString()
+                                                    , (long) documentSnapshot.get("total_ratings")
+                                                    , documentSnapshot.get("product_price").toString()
+                                                    , documentSnapshot.get("cutted_price").toString()
+                                                    , (boolean) documentSnapshot.get("COD")
+                                                    , (boolean) documentSnapshot.get("in_stock")
+                                            ));
+                                        }
+                                        ALREADY_ADDED_TO_WISHLIST = true;
+                                        addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
+                                        DBqueries.wishList.add(productID);
+                                        Toast.makeText(ProductDetailsActivity.this, "Added to wishlist successfully!!", Toast.LENGTH_SHORT).show();
                                     } else {
-                                        running_wishlist_query = false;
+                                        addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
                                         String error = task.getException().getMessage();
-                                        Toast.makeText(ProductDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(ProductDetailsActivity.this, "error", Toast.LENGTH_SHORT).show();
                                     }
+                                    running_wishlist_query = false;
                                 }
                             });
                         }
@@ -373,12 +429,12 @@ public class ProductDetailsActivity extends AppCompatActivity {
                                                             Toast.makeText(ProductDetailsActivity.this, "Thank you for rating.", Toast.LENGTH_SHORT).show();
                                                         }
                                                         for (int x = 0; x < 5; x++) {
-                                                            TextView ratingfigures = (TextView) ratingsNoContainer.getChildAt(5 - starPosition + 1);
+                                                            TextView ratingFigures = (TextView) ratingsNoContainer.getChildAt(5 - starPosition + 1);
 
                                                             ProgressBar progressBar = (ProgressBar) ratingsProgressBarContainer.getChildAt(x);
                                                             int maxProgress = Integer.parseInt(totalRatingsFigure.getText().toString());
                                                             progressBar.setMax(maxProgress);
-                                                            progressBar.setProgress(Integer.parseInt(ratingfigures.getText().toString()));
+                                                            progressBar.setProgress(Integer.parseInt(ratingFigures.getText().toString()));
                                                         }
                                                         initialRating = starPosition;
                                                         averageRating.setText(calculateAverageRating((long) 0, true));
@@ -394,7 +450,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
                                                     } else {
                                                         setRating(initialRating);
                                                         String error = task.getException().getMessage();
-                                                        Toast.makeText(ProductDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
+                                                        Toast.makeText(ProductDetailsActivity.this, "error", Toast.LENGTH_SHORT).show();
                                                     }
                                                     running_rating_query = false;
                                                 }
@@ -422,24 +478,35 @@ public class ProductDetailsActivity extends AppCompatActivity {
                 if (currentUser == null) {
                     signInDialog.show();
                 } else {
-                    Intent deliveryIntent = new Intent(ProductDetailsActivity.this, DeliveryActivity.class);
-                    startActivity(deliveryIntent);
+                    loadingDialog.show();
+                    productDetailsActivity = ProductDetailsActivity.this;
+                    DeliveryActivity.cartItemModelList = new ArrayList<>();
+                    DeliveryActivity.cartItemModelList.add(new CartItemModel(CartItemModel.CART_ITEM, productID
+                            , (String) documentSnapshot.get("product_image_1")
+                            , (String) documentSnapshot.get("product_title")
+                            , (Long) documentSnapshot.get("free_coupens")
+                            , (String) documentSnapshot.get("product_price")
+                            , (String) documentSnapshot.get("cutted_price")
+                            , (long) 1
+                            , (long) 0
+                            , (long) 0
+                            ,(boolean) documentSnapshot.get("in_stock")
+                    ));
+                    DeliveryActivity.cartItemModelList.add(new CartItemModel(CartItemModel.TOTAL_AMOUNT));
+
+                    if (DBqueries.addressesModelList.size() == 0) {
+                        DBqueries.loadAddresses(ProductDetailsActivity.this, loadingDialog);
+                    }else {
+                        loadingDialog.dismiss();
+                        Intent deliveryIntent = new Intent(ProductDetailsActivity.this, DeliveryActivity.class);
+                        startActivity(deliveryIntent);
+                    }
                 }
             }
         });
 
-        addToCartBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (currentUser == null) {
-                    signInDialog.show();
-                } else {
-                    /////todo: add to cart
-                }
-            }
-        });
 
-        //////////// coupen dialog
+//////////// coupen dialog
         final Dialog checkCoupenPriceDialog = new Dialog(ProductDetailsActivity.this);
         checkCoupenPriceDialog.setContentView(R.layout.coupen_redeem_dialog);
         checkCoupenPriceDialog.setCancelable(true);
@@ -461,15 +528,33 @@ public class ProductDetailsActivity extends AppCompatActivity {
         coupensRecyclerView.setLayoutManager(layoutManager);
 
         List<RewardModel> rewardModelList = new ArrayList<>();
-        rewardModelList.add(new RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
-        rewardModelList.add(new RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Cashback", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Discount", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
+        rewardModelList.add(new
+
+                RewardModel("Buy 1 Get 1 free", "till 5th July,2019", "GET 20% CASHBACK on any product above Rs.200.00/- and below Rs.3000.00/-."));
 
         MyRewardsAdapter myRewardsAdapter = new MyRewardsAdapter(rewardModelList, true);
         coupensRecyclerView.setAdapter(myRewardsAdapter);
@@ -491,7 +576,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
         });
 
         ////// signin dialog
-        signInDialog = new Dialog(ProductDetailsActivity.this);
+        signInDialog = new
+
+                Dialog(ProductDetailsActivity.this);
         signInDialog.setContentView(R.layout.sign_in_dialog);
         signInDialog.setCancelable(true);
         signInDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -552,7 +639,11 @@ public class ProductDetailsActivity extends AppCompatActivity {
             initialRating = Integer.parseInt(String.valueOf(DBqueries.myRating.get(index))) - 1;
             setRating(initialRating);
         }
-
+        if (DBqueries.cartList.contains(productID)) {
+            ALREADY_ADDED_TO_CART = true;
+        } else {
+            ALREADY_ADDED_TO_CART = false;
+        }
         if (DBqueries.wishList.contains(productID)) {
             ALREADY_ADDED_TO_WISHLIST = true;
             addToWishlistBtn.setSupportImageTintList(getResources().getColorStateList(R.color.colorPrimary));
@@ -560,6 +651,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
             addToWishlistBtn.setSupportImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
             ALREADY_ADDED_TO_WISHLIST = false;
         }
+        invalidateOptionsMenu();
     }
 
     public static void showDialogRecyclerView() {
@@ -590,9 +682,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
         }
         totalStars = totalStars + currentUserRating;
         if (update) {
-            return String.valueOf(totalStars / Long.parseLong(totalRatingsFigure.getText().toString())).substring(0,3);
+            return String.valueOf(totalStars / Long.parseLong(totalRatingsFigure.getText().toString())).substring(0, 3);
         } else {
-            return String.valueOf(totalStars / (Long.parseLong(totalRatingsFigure.getText().toString()) + 1)).substring(0,3);
+            return String.valueOf(totalStars / (Long.parseLong(totalRatingsFigure.getText().toString()) + 1)).substring(0, 3);
         }
     }
 
@@ -600,6 +692,38 @@ public class ProductDetailsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.search_and_cart_icon, menu);
+
+        cartItem = menu.findItem(R.id.main_cart_icon);
+
+        cartItem.setActionView(R.layout.badge_layout);
+        ImageView badgeIcon = cartItem.getActionView().findViewById(R.id.badge_icon);
+        badgeIcon.setImageResource(R.mipmap.shopping_cart_icon_white);
+        badgeCount = cartItem.getActionView().findViewById(R.id.badge_count);
+
+        if (currentUser != null){
+            if (DBqueries.cartList.size() == 0) {
+                DBqueries.loadCartList(ProductDetailsActivity.this, loadingDialog, false,badgeCount,new TextView(ProductDetailsActivity.this));
+            } else {
+                badgeCount.setVisibility(View.VISIBLE);
+                if (cartList.size() < 99) {
+                    badgeCount.setText(String.valueOf(cartList.size()));
+                } else {
+                    badgeCount.setText("99");
+                }
+            }
+        }
+        cartItem.getActionView().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentUser == null) {
+                    signInDialog.show();
+                } else {
+                    Intent cartIntent = new Intent(ProductDetailsActivity.this, MainActivity.class);
+                    showCart = true;
+                    startActivity(cartIntent);
+                }
+            }
+        });
         return true;
     }
 
@@ -612,6 +736,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == android.R.id.home) {
+            productDetailsActivity = null;
             finish();
             return true;
         } else if (id == R.id.main_search_icon) {
@@ -629,5 +754,11 @@ public class ProductDetailsActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        productDetailsActivity = null;
+        super.onBackPressed();
     }
 }

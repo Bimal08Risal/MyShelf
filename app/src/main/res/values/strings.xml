@@ -17,4 +17,14 @@
     <string name="menu_tools">Tools</string>
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
+
+    <string-array name="nepal_states">
+        <item>Province No. 1(Biratnagar)</item>
+        <item>Province No. 2(Janakpur)</item>
+        <item>Province No. 3(Hetauda)</item>
+        <item>Province No. 4(Gandaki,Pokhara)</item>
+        <item>Province No. 5(Butwal)</item>
+        <item>Province No. 6(Karnli,Birendranagar)</item>
+        <item>Province No. 7(Sudurpaschim,Godawari)</item>
+    </string-array>
 </resources>
